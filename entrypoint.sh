@@ -51,15 +51,32 @@ $set("REVERB_SERVER_PORT", getenv("REVERB_SERVER_PORT") ?: "8443");
 $set("REVERB_SSL_CERT", getenv("REVERB_SSL_CERT") ?: "/opt/certs/cert.pem");
 $set("REVERB_SSL_KEY", getenv("REVERB_SSL_KEY") ?: "/opt/certs/privkey.pem");
 $set("REVERB_SSL_CA", getenv("REVERB_SSL_CA") ?: "/opt/certs/fullchain.pem");
+$set("FORCE_HTTPS", getenv("FORCE_HTTPS") ?: "false");
 
 file_put_contents($path, $env);
 '
 
 # Generate self-signed certificates if not provided
-if [ ! -f /opt/certs/cert.pem ]; then
-  mkdir -p /opt/certs
-  openssl req -x509 -newkey rsa:4096 -keyout /opt/certs/privkey.pem -out /opt/certs/cert.pem -days 365 -nodes -subj "/C=DE/ST=State/L=City/O=Organization/CN=localhost"
-  cp /opt/certs/cert.pem /opt/certs/fullchain.pem
+CERT_DIR=/opt/certs
+REQUESTED_CERT=${REVERB_SSL_CERT:-/opt/certs/cert.pem}
+
+mkdir -p "$CERT_DIR"
+
+if [ -e "$REQUESTED_CERT" ]; then
+  REAL=$(readlink -f "$REQUESTED_CERT" 2>/dev/null || true)
+  if [ -n "$REAL" ] && [ -f "$REAL" ]; then
+    echo "Using cert target $REAL"
+    cp "$REAL" "$CERT_DIR/cert.pem" || true
+    DIR=$(dirname "$REAL")
+    [ -f "$DIR/privkey.pem" ] && cp "$DIR/privkey.pem" "$CERT_DIR/privkey.pem" || true
+    [ -f "$DIR/fullchain.pem" ] && cp "$DIR/fullchain.pem" "$CERT_DIR/fullchain.pem" || true
+  else
+    echo "Certificate path exists but target not found: $REQUESTED_CERT" >&2
+  fi
+else
+  echo "No cert found at $REQUESTED_CERT — generating self-signed cert"
+  openssl req -x509 -newkey rsa:4096 -keyout "$CERT_DIR/privkey.pem" -out "$CERT_DIR/cert.pem" -days 365 -nodes -subj "/C=DE/ST=State/L=City/O=Organization/CN=localhost"
+  cp "$CERT_DIR/cert.pem" "$CERT_DIR/fullchain.pem" || true
 fi
 
 # Key
@@ -76,6 +93,11 @@ fi
 
 if [ "${RUN_STORAGE_LINK:-true}" = "true" ]; then
   php artisan storage:link || true
+fi
+
+# Force HTTPS in Laravel - though not fully implemented
+if [ "$FORCE_HTTPS" = "true" ]; then
+    php artisan config:cache
 fi
 
 # Optional: script from your doc-based workflow :contentReference[oaicite:4]{index=4}

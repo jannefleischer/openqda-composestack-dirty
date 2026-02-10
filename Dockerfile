@@ -64,15 +64,15 @@ WORKDIR /opt/openqda
 COPY --from=base /opt/openqda /opt/openqda
 
 # Entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY entrypoint.sh /opt/openqda/entrypoint.sh
+RUN chmod +x /opt/openqda/entrypoint.sh
 
 # Start script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+COPY start.sh /opt/openqda/start.sh
+RUN chmod +x /opt/openqda/start.sh
 
 WORKDIR /opt/openqda/${OPENQDA_APP_SUBDIR}
 
 EXPOSE 8000 8443
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["/start.sh"]
+ENTRYPOINT ["/opt/openqda/entrypoint.sh"]
+CMD ["/opt/openqda/start.sh"]
