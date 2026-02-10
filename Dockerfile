@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev \
     icu-devtools \
     libzip-dev \
-    git unzip curl ca-certificates \
+    git unzip curl ca-certificates openssl \
     nodejs npm \
  && rm -rf /var/lib/apt/lists/*
 
@@ -67,8 +67,12 @@ COPY --from=base /opt/openqda /opt/openqda
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Start script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 WORKDIR /opt/openqda/${OPENQDA_APP_SUBDIR}
 
-EXPOSE 8000 8080
+EXPOSE 8000 8443
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["/start.sh"]
