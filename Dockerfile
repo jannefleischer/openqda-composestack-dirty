@@ -5,6 +5,10 @@ FROM php:8.2-cli AS base
 ARG OPENQDA_GIT_URL
 ARG OPENQDA_GIT_REF=main
 ARG OPENQDA_APP_SUBDIR=web
+ARG VITE_REVERB_APP_KEY=local-key
+ARG VITE_REVERB_HOST=localhost
+ARG VITE_REVERB_PORT=443
+ARG VITE_REVERB_SCHEME=https
 
 
 
@@ -23,9 +27,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
 
 RUN docker-php-ext-configure intl \
- && docker-php-ext-install pdo_mysql zip intl
+ && docker-php-ext-install pdo_mysql zip intl pcntl
 
-# Composer
+# Copy Composer from official image (multiarch)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /opt/openqda
@@ -43,6 +47,10 @@ RUN composer install --no-interaction --prefer-dist --no-dev
 # Frontend build (falls package.json existiert)
 RUN if [ -f package.json ]; then \
       npm ci || npm install; \
+      VITE_REVERB_APP_KEY=${VITE_REVERB_APP_KEY} \
+      VITE_REVERB_HOST=${VITE_REVERB_HOST} \
+      VITE_REVERB_PORT=${VITE_REVERB_PORT} \
+      VITE_REVERB_SCHEME=${VITE_REVERB_SCHEME} \
       npm run build; \
     fi
 
@@ -55,8 +63,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev libzip-dev libpng16-16 \
   && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo_mysql zip intl
+RUN docker-php-ext-install pdo_mysql zip intl pcntl
 
+# Copy Composer from official image (multiarch)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # App rüberkopieren

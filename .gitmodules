@@ -1,0 +1,3 @@
+[submodule "openqda_src"]
+	path = openqda_src
+	url = https://github.com/openqda/openqda.git
