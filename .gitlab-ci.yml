@@ -1,0 +1,65 @@
+image: docker/compose:2.24.2
+
+services:
+  - name: docker:24.0.2-dind
+    alias: docker
+
+variables:
+  DOCKER_HOST: "tcp://docker:2375/"
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - build
+  - test
+
+before_script:
+  - docker compose version
+  - docker info
+
+build_stack:
+  stage: build
+  script:
+    - docker compose up -d --build
+  artifacts:
+    when: always
+    expire_in: 1h
+  after_script:
+    - docker compose down --volumes --remove-orphans || true
+
+integration_tests:
+  stage: test
+  script:
+    - docker compose up -d --build
+    - echo "Waiting for containers to start..."
+    - |
+      # wait for mysql to respond
+      MYSQL_C=""
+      for i in $(seq 1 30); do
+        MYSQL_C=$(docker compose ps -q mysql) || true
+        if [ -n "$MYSQL_C" ]; then
+          if docker exec "$MYSQL_C" mysqladmin ping -ppassword >/dev/null 2>&1; then
+            echo "MySQL ready"; break
+          fi
+        fi
+        sleep 2
+      done
+      if [ -z "$MYSQL_C" ] || ! docker exec "$MYSQL_C" mysqladmin ping -ppassword >/dev/null 2>&1; then
+        echo "MySQL not ready after timeout"; docker compose logs mysql || true; exit 1
+      fi
+    - |
+      # check redis
+      REDIS_C=$(docker compose ps -q redis) || true
+      if [ -z "$REDIS_C" ]; then echo "Redis container missing"; docker compose ps; exit 1; fi
+      if ! docker exec "$REDIS_C" redis-cli ping >/dev/null 2>&1; then echo "Redis not responding"; docker compose logs redis; exit 1; fi
+    - |
+      # check web app reachable from inside container
+      OPENQDA_C=$(docker compose ps -q openqda) || true
+      if [ -z "$OPENQDA_C" ]; then echo "OpenQDA container missing"; docker compose ps; exit 1; fi
+      if ! docker exec "$OPENQDA_C" sh -c 'curl -fsS http://localhost:8000/ >/dev/null'; then
+        echo "Web app not responding"; docker compose logs openqda; exit 1
+      fi
+    - echo "All integration checks passed"
+  when: on_success
+  after_script:
+    - docker compose down --volumes --remove-orphans

@@ -6,8 +6,8 @@ function get_env_value() {
     grep "^${1}=" .env 2>/dev/null | cut -d '=' -f2- | tr -d '"' || echo ""
 }
 
-# Check if DEBUG mode is enabled
-if [ "${DEBUG:-false}" = "true" ]; then
+# Check if debug mode is enabled via APP_DEBUG
+if [ "${APP_DEBUG:-false}" = "true" ]; then
     echo "=== OpenQDA Debug Mode ==="
     
     # Get configuration from .env

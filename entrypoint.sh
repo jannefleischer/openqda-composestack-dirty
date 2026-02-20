@@ -23,17 +23,47 @@ $set = function($k,$v) use (&$env){
   }
 };
 
+$set("OPENQDA_GIT_URL", getenv("OPENQDA_GIT_URL") ?: "https://github.com/openqda/openqda.git");
+$set("OPENQDA_GIT_REF", getenv("OPENQDA_GIT_REF") ?: "1.0.4");
+$set("OPENQDA_APP_SUBDIR", getenv("OPENQDA_APP_SUBDIR") ?: "web");
+
 $set("APP_ENV", getenv("APP_ENV") ?: "local");
-$set("APP_DEBUG", getenv("APP_DEBUG") ?: "true");
+$set("APP_KEY", getenv("APP_KEY") ?: "totalsecurekeythatshouldbereplacedwitharealsecurekeybeforeproductionuse");
+$set("APP_URL", getenv("APP_URL") ?: "https://openqda.example.local");
+$set("ASSET_URL", getenv("ASSET_URL") ?: "https://openqda.example.local");
+$set("APP_PORT", getenv("APP_PORT") ?: "8923");
+$set("TRUSTED_PROXIES", getenv("TRUSTED_PROXIES") ?: "*");
+$set("FORCE_HTTPS", getenv("FORCE_HTTPS") ?: "true");
+
+$set("APP_DEBUG", getenv("APP_DEBUG") ?: getenv("DEBUG") ?: "true");
 $set("LOG_LEVEL", getenv("LOG_LEVEL") ?: "debug");
-// Only set APP_KEY if provided via environment - otherwise let artisan key:generate handle it
-$app_key = getenv("APP_KEY");
-if ($app_key) {
-  $set("APP_KEY", $app_key);
-  error_log("APP_KEY: Using provided key from environment: " . substr($app_key, 0, 20) . "...");
-}
-$set("APP_URL", getenv("APP_URL") ?: "http://localhost:8000");
-$set("ASSET_URL", getenv("ASSET_URL") ?: "http://localhost:8000");
+
+// ALTCHA / CAPTCHA
+$set("ALTCHA_EXPIRES", getenv("ALTCHA_EXPIRES") ?: "300");
+$set("ALTCHA_ALGORITHM", getenv("ALTCHA_ALGORITHM") ?: "SHA-256");
+$set("ALTCHA_ENABLE", getenv("ALTCHA_ENABLE") ?: "true");
+$set("ALTCHA_HMAC_KEY", getenv("ALTCHA_HMAC_KEY") ?: "some64characterhexstringthatshouldbereplacedwitharealsecurekeybeforeproductionuse");
+
+$set("MAIL_MAILER", getenv("MAIL_MAILER") ?: "smtp");
+$set("MAIL_HOST", getenv("MAIL_HOST") ?: "mail.example.local");
+$set("MAIL_PORT", getenv("MAIL_PORT") ?: "1025");
+$set("MAIL_USERNAME", getenv("MAIL_USERNAME") ?: "openqda@example");
+$set("MAIL_PASSWORD", getenv("MAIL_PASSWORD") ?: "securepw");
+$set("MAIL_ENCRYPTION", getenv("MAIL_ENCRYPTION") ?: "");
+$set("MAIL_FROM_ADDRESS", getenv("MAIL_FROM_ADDRESS") ?: "openqda@example.local");
+$set("MAIL_FROM_NAME", getenv("MAIL_FROM_NAME") ?: "OpenQDA");
+
+$set("REVERB_APP_KEY", getenv("REVERB_APP_KEY") ?: "local-key");
+$set("VITE_REVERB_APP_KEY", getenv("VITE_REVERB_APP_KEY") ?: "local-key");
+$set("REVERB_APP_ID", getenv("REVERB_APP_ID") ?: "local");
+$set("REVERB_APP_SECRET", getenv("REVERB_APP_SECRET") ?: "local-secret");
+$set("REVERB_SCHEME", getenv("REVERB_SCHEME") ?: "http");
+$set("REVERB_SERVER_HOST", getenv("REVERB_SERVER_HOST") ?: "0.0.0.0");
+$set("REVERB_SERVER_PORT", getenv("REVERB_SERVER_PORT") ?: "8443");
+$set("REVERB_PORT", getenv("REVERB_PORT") ?: "8443");
+$set("VITE_REVERB_HOST", getenv("VITE_REVERB_HOST") ?: "openqda.example.local");
+$set("VITE_REVERB_PORT", getenv("VITE_REVERB_PORT") ?: "443");
+$set("VITE_REVERB_SCHEME", getenv("VITE_REVERB_SCHEME") ?: "https");
 
 $set("DB_CONNECTION", getenv("DB_CONNECTION") ?: "mysql");
 $set("DB_HOST", getenv("DB_HOST") ?: "mysql");
@@ -45,43 +75,6 @@ $set("DB_PASSWORD", getenv("DB_PASSWORD") ?: "password");
 $set("REDIS_HOST", getenv("REDIS_HOST") ?: "redis");
 $set("REDIS_PORT", getenv("REDIS_PORT") ?: "6379");
 
-$set("MAIL_MAILER", getenv("MAIL_MAILER") ?: "smtp");
-$set("MAIL_HOST", getenv("MAIL_HOST") ?: "mailpit");
-$set("MAIL_PORT", getenv("MAIL_PORT") ?: "1025");
-$set("MAIL_USERNAME", getenv("MAIL_USERNAME") ?: "");
-$set("MAIL_PASSWORD", getenv("MAIL_PASSWORD") ?: "");
-$set("MAIL_ENCRYPTION", getenv("MAIL_ENCRYPTION") ?: "");
-$set("MAIL_FROM_ADDRESS", getenv("MAIL_FROM_ADDRESS") ?: "noreply@openqda.local");
-$set("MAIL_FROM_NAME", getenv("MAIL_FROM_NAME") ?: "OpenQDA");
-
-// ALTCHA Configuration
-$altcha_key = getenv("ALTCHA_HMAC_KEY");
-if (!$altcha_key) {
-  $altcha_key = bin2hex(random_bytes(32));
-  error_log("ALTCHA: Generated new HMAC key: " . substr($altcha_key, 0, 16) . "...");
-} else {
-  error_log("ALTCHA: Using provided HMAC key: " . substr($altcha_key, 0, 16) . "...");
-}
-$set("ALTCHA_HMAC_KEY", $altcha_key);
-$set("ALTCHA_EXPIRES", getenv("ALTCHA_EXPIRES") ?: "300");
-$set("ALTCHA_ALGORITHM", getenv("ALTCHA_ALGORITHM") ?: "SHA-256");
-
-$set("REVERB_APP_ID", getenv("REVERB_APP_ID") ?: "local");
-$set("REVERB_APP_KEY", getenv("REVERB_APP_KEY") ?: "local-key");
-$set("REVERB_APP_SECRET", getenv("REVERB_APP_SECRET") ?: "local-secret");
-$set("VITE_REVERB_APP_KEY", getenv("VITE_REVERB_APP_KEY") ?: '"${REVERB_APP_KEY}"');
-$set("VITE_REVERB_HOST", getenv("VITE_REVERB_HOST") ?: "localhost");
-$set("VITE_REVERB_PORT", getenv("VITE_REVERB_PORT") ?: "8443");
-$set("VITE_REVERB_SCHEME", getenv("VITE_REVERB_SCHEME") ?: "https");
-$set("REVERB_SCHEME", getenv("REVERB_SCHEME") ?: "https");
-$set("REVERB_SERVER_HOST", getenv("REVERB_SERVER_HOST") ?: "0.0.0.0");
-$set("REVERB_SERVER_PORT", getenv("REVERB_SERVER_PORT") ?: "8443");
-$set("REVERB_SSL_CERT", getenv("REVERB_SSL_CERT") ?: "/opt/certs/cert.pem");
-$set("REVERB_SSL_KEY", getenv("REVERB_SSL_KEY") ?: "/opt/certs/privkey.pem");
-$set("REVERB_SSL_CA", getenv("REVERB_SSL_CA") ?: "/opt/certs/fullchain.pem");
-$set("FORCE_HTTPS", getenv("FORCE_HTTPS") ?: "false");
-$set("TRUSTED_PROXIES", getenv("TRUSTED_PROXIES") ?: "*");
-
 // Clear LARAVEL_WEBSOCKETS_SSL variables (not needed for Reverb without SSL)
 $env = preg_replace("/^LARAVEL_WEBSOCKETS_SSL_.*=.*$/m", "", $env);
 $env = preg_replace("/\n\n+/", "\n", $env);
@@ -90,7 +83,7 @@ file_put_contents($path, $env);
 '
 
 # Debug output: Show ALTCHA configuration
-if [ "${DEBUG:-false}" = "true" ]; then
+if [ "${APP_DEBUG:-false}" = "true" ]; then
   echo "=== ALTCHA Configuration ==="
   grep "^ALTCHA" "${APP_DIR}/.env" || echo "No ALTCHA settings found"
   echo "============================"
