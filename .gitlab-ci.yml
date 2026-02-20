@@ -1,4 +1,4 @@
-image: docker/compose:2.24.2
+image: docker/compose:latest
 
 services:
   - name: docker:24.0.2-dind
