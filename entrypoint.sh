@@ -28,7 +28,7 @@ $set("OPENQDA_GIT_REF", getenv("OPENQDA_GIT_REF") ?: "1.0.4");
 $set("OPENQDA_APP_SUBDIR", getenv("OPENQDA_APP_SUBDIR") ?: "web");
 
 $set("APP_ENV", getenv("APP_ENV") ?: "local");
-$set("APP_KEY", getenv("APP_KEY") ?: "totalsecurekeythatshouldbereplacedwitharealsecurekeybeforeproductionuse");
+$set("APP_KEY", getenv("APP_KEY") ?: "base64:b8t9cxd9X5Z496Kzn6P1GeweUMdO8wd94PuEZiXi4Wk=");
 $set("APP_URL", getenv("APP_URL") ?: "https://openqda.example.local");
 $set("ASSET_URL", getenv("ASSET_URL") ?: "https://openqda.example.local");
 $set("APP_PORT", getenv("APP_PORT") ?: "8923");
@@ -42,7 +42,7 @@ $set("LOG_LEVEL", getenv("LOG_LEVEL") ?: "debug");
 $set("ALTCHA_EXPIRES", getenv("ALTCHA_EXPIRES") ?: "300");
 $set("ALTCHA_ALGORITHM", getenv("ALTCHA_ALGORITHM") ?: "SHA-256");
 $set("ALTCHA_ENABLE", getenv("ALTCHA_ENABLE") ?: "true");
-$set("ALTCHA_HMAC_KEY", getenv("ALTCHA_HMAC_KEY") ?: "some64characterhexstringthatshouldbereplacedwitharealsecurekeybeforeproductionuse");
+$set("ALTCHA_HMAC_KEY", getenv("ALTCHA_HMAC_KEY") ?: "64b8e24c6fc4271c53fee28d370451728876a4466d0a515da6ca437ca35dfa06");
 
 $set("MAIL_MAILER", getenv("MAIL_MAILER") ?: "smtp");
 $set("MAIL_HOST", getenv("MAIL_HOST") ?: "mail.example.local");
