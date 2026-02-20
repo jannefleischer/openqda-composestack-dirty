@@ -1,4 +1,4 @@
-image: docker/compose:latest
+image: docker:24.0.2
 
 services:
   - name: docker:24.0.2-dind
@@ -10,27 +10,26 @@ variables:
   DOCKER_DRIVER: overlay2
 
 stages:
-  - build
   - test
 
 before_script:
+  # ensure docker daemon reachable
+  - until docker info >/dev/null 2>&1; do sleep 1; done
+  # install prerequisites (Alpine)
+  - apk add --no-cache curl bash jq ca-certificates
+  # install Docker Compose V2 as docker CLI plugin
+  - mkdir -p /usr/local/lib/docker/cli-plugins
+  - 'curl -SL "https://github.com/docker/compose/releases/download/v2.24.2/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose'
+  - chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
   - docker compose version
   - docker info
-
-build_stack:
-  stage: build
-  script:
-    - docker compose up -d --build
-  artifacts:
-    when: always
-    expire_in: 1h
-  after_script:
-    - docker compose down --volumes --remove-orphans || true
 
 integration_tests:
   stage: test
   script:
-    - docker compose up -d --build
+    - cp .env.default .env
+    - docker compose build --parallel
+    - docker compose up -d
     - echo "Waiting for containers to start..."
     - |
       # wait for mysql to respond
@@ -52,14 +51,25 @@ integration_tests:
       REDIS_C=$(docker compose ps -q redis) || true
       if [ -z "$REDIS_C" ]; then echo "Redis container missing"; docker compose ps; exit 1; fi
       if ! docker exec "$REDIS_C" redis-cli ping >/dev/null 2>&1; then echo "Redis not responding"; docker compose logs redis; exit 1; fi
+    - sleep 5
     - |
-      # check web app reachable from inside container
+      # check web app reachable from inside container (wait loop, expect HTTP 200)
       OPENQDA_C=$(docker compose ps -q openqda) || true
       if [ -z "$OPENQDA_C" ]; then echo "OpenQDA container missing"; docker compose ps; exit 1; fi
-      if ! docker exec "$OPENQDA_C" sh -c 'curl -fsS http://localhost:8000/ >/dev/null'; then
-        echo "Web app not responding"; docker compose logs openqda; exit 1
+      for i in $(seq 1 60); do
+        HTTP=$(docker exec "$OPENQDA_C" sh -c 'curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/' ) || HTTP=""
+        if [ "$HTTP" = "200" ]; then
+          echo "Web app ready (HTTP 200)"; break
+        fi
+        echo "Waiting for web app... attempt=$i, got=$HTTP"
+        sleep 3
+      done
+      HTTP=$(docker exec "$OPENQDA_C" sh -c 'curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/' ) || HTTP=""
+      if [ "$HTTP" != "200" ]; then
+        echo "Web app not responding (last HTTP=$HTTP)"; docker compose logs openqda -t --tail=200; exit 1
       fi
     - echo "All integration checks passed"
   when: on_success
   after_script:
     - docker compose down --volumes --remove-orphans
+    - docker system prune -af || true

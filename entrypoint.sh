@@ -61,9 +61,9 @@ $set("REVERB_SCHEME", getenv("REVERB_SCHEME") ?: "http");
 $set("REVERB_SERVER_HOST", getenv("REVERB_SERVER_HOST") ?: "0.0.0.0");
 $set("REVERB_SERVER_PORT", getenv("REVERB_SERVER_PORT") ?: "8443");
 $set("REVERB_PORT", getenv("REVERB_PORT") ?: "8443");
-$set("VITE_REVERB_HOST", getenv("VITE_REVERB_HOST") ?: "openqda.example.local");
-$set("VITE_REVERB_PORT", getenv("VITE_REVERB_PORT") ?: "443");
-$set("VITE_REVERB_SCHEME", getenv("VITE_REVERB_SCHEME") ?: "https");
+$set("VITE_REVERB_HOST", getenv("VITE_REVERB_HOST") ?: "localhost");
+$set("VITE_REVERB_PORT", getenv("VITE_REVERB_PORT") ?: "8443");
+$set("VITE_REVERB_SCHEME", getenv("VITE_REVERB_SCHEME") ?: "http");
 
 $set("DB_CONNECTION", getenv("DB_CONNECTION") ?: "mysql");
 $set("DB_HOST", getenv("DB_HOST") ?: "mysql");
